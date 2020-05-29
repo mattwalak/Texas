@@ -10,6 +10,8 @@
 
 using namespace std;
 
+int numTies = 0;
+
 string ctos(int c){
 	string result = "";
 	switch(VALUE(c)){
@@ -410,12 +412,14 @@ bool tieBreak(int * hand_1, int * hand_2, int len, int rank){
 bool compare(int * hand_1, int * hand_2, int len){
 	int rank_1 = getRank(hand_1, len);
 	int rank_2 = getRank(hand_2, len);
-	if(rank_1 > rank_2)
+	if(rank_1 > rank_2){
 		return true;
-	else if(rank_1 < rank_2)
+	}else if(rank_1 < rank_2){
 		return false;
-	else
+	}else{
+		numTies++;
 		return tieBreak(hand_1, hand_2, len, rank_1);
+	}
 }
 
 // Assumes a 5 card hand (int * must be allocated before)
@@ -441,7 +445,7 @@ int main(int argc, char ** argv){
 	int win = 0;
 	int loss = 0;
 
-	for(int i = 0; i < pow(52,5); i++){
+	for(int i = 0; i < 100; i++){
 		int * hand_1 = new int[5];
 		intToHand(rand() % max, hand_1);
 		int * hand_2 = new int[5];
@@ -456,7 +460,7 @@ int main(int argc, char ** argv){
 	}
 
 	cout << "wins: " << win << "; loss: " << loss << endl;
-
+	cout << "numties = " << numTies << endl;
 	/*
 	int * hand_1 = new int[5];
 	hand_1[0] = atoi(argv[1]);
