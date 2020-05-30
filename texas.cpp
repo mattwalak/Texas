@@ -4,9 +4,13 @@
 #include <stdio.h> 
 #include <stdlib.h>
 #include <vector>
+#include "MERSENNE_TWISTER.h"
+
+MERSENNE_TWISTER randy;
 
 #define SUIT(c) c%4
 #define VALUE(c) c/4
+#define CARD(v,s) v*4 + s
 
 using namespace std;
 
@@ -54,6 +58,8 @@ string ctos(int c){
 		case 12:
 			result += "A of ";
 			break;
+		default:
+			return "invalid card";
 	}
 
 	switch(SUIT(c)){
@@ -69,6 +75,8 @@ string ctos(int c){
 		case 3:
 			result += "spades";
 			break;
+		default:
+			return "invalid card";
 	}
 	return result;
 }
@@ -115,8 +123,8 @@ bool hasFlush(int * hand, int len){
 
 // Bool returns: {hasFourKind, hasThreeKind, hasTwoPair, hasOnePair}
 // Tiebreak contains the cards we resort to in the case of a tie
-bool * findGroupings(int * hand, int len){
-	bool * results = new bool[4]{false, false, false, false};
+bool * findGroupings(int * hand, int len, bool * results){
+	//bool * results = new bool[4]{false, false, false, false};
 	int counts[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	for(int i = 0; i < len; i++)
@@ -153,7 +161,8 @@ Assumes hand is sorted greatest to least
 int getRank(int * hand, int len){
 	bool straight = hasStraight(hand, len);
 	bool flush = hasFlush(hand, len);
-	bool * groups = findGroupings(hand, len);
+	bool groups[4];
+	findGroupings(hand, len, groups);
 	if(straight && flush){
 		if(VALUE(hand[0]) == 12)
 			return 9;
@@ -417,7 +426,6 @@ bool compare(int * hand_1, int * hand_2, int len){
 	}else if(rank_1 < rank_2){
 		return false;
 	}else{
-		numTies++;
 		return tieBreak(hand_1, hand_2, len, rank_1);
 	}
 }
@@ -430,37 +438,121 @@ void intToHand(int id, int * out){
 	}
 }
 
+int stoc(char * in){
+	// Find value;
+	int val = atoi(in);
+	if(val == 0){
+		switch(in[0]){
+			case 'j':
+				val = 11;
+				break;
+			case 'q':
+				val = 12;
+				break;
+			case 'k':
+				val = 13;
+				break;
+			case 'a':
+				val = 14;
+				break;
+			default:
+				cout << "INVALID INPUT: " << in << endl;
+				exit(0);
+		}
+	}
+	val -= 2;
+
+	// Find suit
+	int suit;
+	int i = 1;
+	while(isdigit(in[i])) 
+		i++;
+	switch(in[i]){
+		case 'c':
+			suit = 0;
+			break;
+		case 'd':
+			suit = 1;
+			break;
+		case 'h':
+			suit = 2;
+			break;
+		case 's':
+			suit = 3;
+			break;
+		default:
+			cout << "INVALID INPUT: " << in << endl;
+			exit(0);
+	}
+
+	return CARD(val, suit);
+}
+
+// Deals two hands of 5 cards from a shuffled deck
+void twoHandsFromDeck(int * hand_1, int * hand_2){
+	vector<int> deck;
+	for(int i = 0; i < 52; i++)
+		deck.push_back(i);
+	for(int i = 0; i < 10; i++){
+		int r = floor(randy.rand() * deck.size()); // Make sure no off by one here
+		if(i%2 == 0)
+			hand_1[i/2] = deck[r];
+		else
+			hand_2[i/2] = deck[r];
+
+		deck.erase(deck.begin()+r);
+	}
+}
+
 // Arg list
 int main(int argc, char ** argv){
+	
+	/*if(argc < 10){
+		cout << "fine i'll be nice about it. enter 10 cards. please." << endl;
+	}
+
+	int hand_1[5];
+	int hand_2[5];
+	twoHandsFromDeck(hand_1, hand_2);
+	for(int i = 1; i < 6; i++){
+		hand_1[i] = stoc(argv[i]);
+	}
+	for(int i = 6; i < 11; i++){
+		hand_2[i] = stoc(argv[i]);
+	}
+
+	cout << "hand_1:\n" << handToStr(hand_1, 5) << "\nhand_2:\n" << handToStr(hand_2, 5) << endl;
+	cout << (compare(hand_1, hand_2, 5) ? "hand_1 wins" : "hand_2 wins") << endl;*/
+
+
+
 	/*if(argc < 3){
 		cout << "you clearly don't know what you're doing" << endl;
 		exit(0);
 	}*/
 
-	/*int * hand = new int[5];
-	intToHand(atoi(argv[1]), hand);
-	isort(hand, 5);
-	cout << handToStr(hand, 5) << endl;*/
+	
 	int max = pow(52, 2) - 1;
 	int win = 0;
 	int loss = 0;
 
-	for(int i = 0; i < 100; i++){
-		int * hand_1 = new int[5];
-		intToHand(rand() % max, hand_1);
-		int * hand_2 = new int[5];
-		intToHand(rand() % max, hand_2);
+	for(int i = 0; i < 100000000; i++){
+		int hand_1[5];
+		int hand_2[5];
+		twoHandsFromDeck(hand_1, hand_2);
 		if(compare(hand_1, hand_2, 5)){
 			win++;
 		}else{
 			loss++;
 		}
+
 		if(i%1000000 == 0)
 			cout << i/1000000 << endl;
 	}
 
 	cout << "wins: " << win << "; loss: " << loss << endl;
-	cout << "numties = " << numTies << endl;
+	cout << "exact ties = " << numTies << endl;
+
 	/*
 	int * hand_1 = new int[5];
 	hand_1[0] = atoi(argv[1]);
