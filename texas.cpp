@@ -123,8 +123,9 @@ bool hasFlush(int * hand, int len){
 
 // Bool returns: {hasFourKind, hasThreeKind, hasTwoPair, hasOnePair}
 // Tiebreak contains the cards we resort to in the case of a tie
-bool * findGroupings(int * hand, int len, bool * results){
-	//bool * results = new bool[4]{false, false, false, false};
+void findGroupings(int * hand, int len, bool * results){
+	for(int i = 0; i < 4; i++) results[i] = false;
+
 	int counts[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	for(int i = 0; i < len; i++)
@@ -141,7 +142,6 @@ bool * findGroupings(int * hand, int len, bool * results){
 				results[3] = true;
 		}		
 	}
-	return results;
 }
 
 /*
@@ -216,7 +216,15 @@ bool tieBreak(int * hand_1, int * hand_2, int len, int rank){
 	if(rank == 8){
 		// Compare highest card (Because this is texas holdem, we cant have two straight
 		// flushes with the same strength in a different suit)
-		return (VALUE(hand_1[0]) > VALUE(hand_2[0]));
+		// but whatever, if that happens determine winner by most powerful suit
+		int value_1 = VALUE(hand_1[0]);
+		int value_2 = VALUE(hand_2[0]);
+		if(value_1 > value_2)
+			return true;
+		else if(value_2 > value_1)
+			return false;
+		else
+			return (SUIT(hand_1[0]) > SUIT(hand_2[0]));
 	}
 	if(rank == 7){
 		// Use value of four pair (in tiebreaker array)
@@ -258,7 +266,7 @@ bool tieBreak(int * hand_1, int * hand_2, int len, int rank){
 			return (SUIT(hand_1[0]) > SUIT(hand_2[0]));
 	}
 	if(rank == 3){
-		// Compare value of three pair (in tie breaker array)
+		// Compare value of three of a kind (in tie breaker array)
 		// Can't have matching three pair silly
 		int value_1;
 		if(VALUE(hand_1[0]) == VALUE(hand_1[2]))
@@ -507,22 +515,24 @@ void twoHandsFromDeck(int * hand_1, int * hand_2){
 // Arg list
 int main(int argc, char ** argv){
 	
-	/*if(argc < 10){
+	if(argc < 10){
 		cout << "fine i'll be nice about it. enter 10 cards. please." << endl;
 	}
 
 	int hand_1[5];
 	int hand_2[5];
-	twoHandsFromDeck(hand_1, hand_2);
+	//twoHandsFromDeck(hand_1, hand_2);
 	for(int i = 1; i < 6; i++){
-		hand_1[i] = stoc(argv[i]);
+		hand_1[i-1] = stoc(argv[i]);
 	}
 	for(int i = 6; i < 11; i++){
-		hand_2[i] = stoc(argv[i]);
+		hand_2[i-6] = stoc(argv[i]);
 	}
+	isort(hand_1, 5);
+	isort(hand_2, 5);
 
 	cout << "hand_1:\n" << handToStr(hand_1, 5) << "\nhand_2:\n" << handToStr(hand_2, 5) << endl;
-	cout << (compare(hand_1, hand_2, 5) ? "hand_1 wins" : "hand_2 wins") << endl;*/
+	cout << (compare(hand_1, hand_2, 5) ? "hand_1 wins" : "hand_2 wins") << endl;
 
 
 
@@ -531,7 +541,7 @@ int main(int argc, char ** argv){
 		exit(0);
 	}*/
 
-	
+	/*
 	int max = pow(52, 2) - 1;
 	int win = 0;
 	int loss = 0;
@@ -551,7 +561,7 @@ int main(int argc, char ** argv){
 	}
 
 	cout << "wins: " << win << "; loss: " << loss << endl;
-	cout << "exact ties = " << numTies << endl;
+	cout << "exact ties = " << numTies << endl;*/
 
 	/*
 	int * hand_1 = new int[5];
